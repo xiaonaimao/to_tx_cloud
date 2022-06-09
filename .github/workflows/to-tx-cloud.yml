@@ -1,0 +1,59 @@
+# 工作流的名字，github工作流文档https://docs.github.com/cn/actions/using-workflows/about-workflows
+name: 工作流自动打包并上传腾讯云服务器
+
+# 指定此工作流程的触发器，这里只有push到main分支才触发
+on:
+    push:
+        branches:
+            - main
+
+# 所有作业
+jobs:
+    # 单个作业，作业名随便起
+    build:
+        # runs-on 指定作业运行所需要的虚拟机环境(必填字段)
+        # 将作业配置在最新版ubuntu上运行，意味着这个作业会在github托管的新虚拟机上运行
+        runs-on: ubuntu-latest
+        # 这个作业的所有步骤，steps下的每一项都是一个单独的操作或shell脚本
+        steps:
+            # 获取源码
+            - name: 迁出代码
+              # 使用action库  actions/checkout获取源码
+              uses: actions/checkout@master
+
+            # 安装Node，为之后npm提供支持
+            - name: 安装node.js
+              # 使用action库  actions/setup-node安装node
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 14.0.0
+
+            # 安装依赖
+            - name: 安装依赖
+              run: npm install
+
+            # 打包
+            - name: 打包
+              run: npm run build
+
+            # 上传到腾讯云
+            - name: 发布到腾讯云
+              # 下面具体配置和用法直接找github上的ssh-deploy的库去看，https://github.com/easingthemes/ssh-deploy
+              # 使用nodejs开发的，运用rsync over ssh部署代码的github action。可使用于其他云服务器厂商
+              uses: easingthemes/ssh-deploy@v2.1.1
+              env:
+                  # 私钥：secrets是github工作流专门为机密内容准备的环境变量
+                  # 选项卡依次找settings-secrets-actions，右上角new repository secret
+                  # 新建变量名为下面花括号里的PRIVATE_KEY，变量值为自己的云服务器绑定的私钥内容
+                  SSH_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+                  # rsync（一种可断点续传的传输方式）参数：avzr分别表示递归传输并保留文件属性、详细输出、传输时压缩处理、对子目录递归处理
+                  # --delete表示删除目标目录里源目录没有的文件
+                  ARGS: '-avzr --delete'
+                  # 源目录
+                  SOURCE: 'dist'
+                  # 服务器ip：同上私钥，新建github机密环境变量，值为自己云服务器公网ip
+                  REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+                  # 用户
+                  REMOTE_USER: 'root'
+                  # 目标目录：发布到服务器的哪个文件夹
+                  TARGET: '/www/wwwroot'
