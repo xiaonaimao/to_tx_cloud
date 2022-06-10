@@ -1,5 +1,5 @@
 # xiaonaimao.github.io
 
-这个是github page的仓库
-
-主要用来做展示，给别人看
+这个仓库专门用来推送到腾讯云的服务器
+通过actions来实现
+每次push到main的时候会推送
