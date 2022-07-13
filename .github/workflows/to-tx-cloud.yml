@@ -50,7 +50,7 @@ jobs:
                   # --delete表示删除目标目录里源目录没有的文件
                   ARGS: '-avzr --delete'
                   # 源目录
-                  SOURCE: 'dashboard'
+                  SOURCE: 'something'
                   # 服务器ip：同上私钥，新建github机密环境变量，值为自己云服务器公网ip
                   REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
                   # 用户
